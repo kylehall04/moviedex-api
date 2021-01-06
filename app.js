@@ -7,8 +7,9 @@ const movies = require('./movies-data-small.json');
 
 const app = express();
 const API_TOKEN = process.env.API_TOKEN;
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'common';
 
-app.use(morgan('common'));
+app.use(morgan(morganSetting));
 app.use(cors());
 app.use(helmet());
 app.use(validateBearer);
@@ -49,4 +50,15 @@ app.get('/movie', function handleGetMovie(req, res) {
   res.json(results);
 });
 
-app.listen(8080, () => console.log('Server on 8080'));
+app.use((error, req, res, next) => {
+  let response;
+  if (process.env.NODE_ENV === 'production') {
+    response = { error: { message: 'server error' } };
+  } else {
+    response = { error };
+  }
+  res.status(500).json(response);
+});
+
+const PORT = process.env.PORT || 8000;
+app.listen(PORT);
